@@ -2,7 +2,7 @@ from sqlalchemy import String, Integer, ForeignKey, DateTime, Text, Boolean, fun
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from config import Base
 from datetime import datetime
-class Company(Base):
+class Company_table(Base):
     __tablename__="companies"
 
     id: Mapped[int] = mapped_column(
@@ -27,25 +27,34 @@ class Company(Base):
         unique=True,
         nullable=False
     )
-
-    jobs: Mapped[list["Job"]] = relationship(
+    email:Mapped[str] = mapped_column(
+        String(100),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+    hashed_password: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False
+    )
+    jobs: Mapped[list["Job_table"]] = relationship(
         back_populates="company",
         cascade="all, delete-orphan"
     )
     
-class Skills(Base):
+class Skills_table(Base):
     __tablename__="skills"
     id:Mapped[int] = mapped_column(
         primary_key=True,
         autoincrement=True
     )
-    name = Mapped[str] = mapped_column(
+    name : Mapped[str] = mapped_column(
         String(100),
         nullable=False,
         unique=True
     )
 
-class Job(Base):
+class Job_table(Base):
     __tablename__="jobs"
 
     id :Mapped[int] = mapped_column(
@@ -64,7 +73,8 @@ class Job(Base):
     )
     status: Mapped[bool] = mapped_column(
         Boolean,
-        nullable=False
+        nullable=False,
+        default="True"
     )
     company_id: Mapped[int] = mapped_column(
         ForeignKey("companies.id")
@@ -75,11 +85,11 @@ class Job(Base):
         nullable=False,
         default=func.now()
     )
-    company: Mapped[Company] = relationship(
+    company: Mapped[Company_table] = relationship(
         back_populates="jobs"
     )
 
-class Worker(Base):
+class Worker_table(Base):
     __tablename__="workers"
 
     id :Mapped[int] = mapped_column(
@@ -99,11 +109,21 @@ class Worker(Base):
         String(100),
         nullable=False
     )
-    skills: Mapped[list[Skills]] = relationship(
+    email:Mapped[str] = mapped_column(
+        String(100),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+    hashed_password: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False
+    )
+    skills: Mapped[list[Skills_table]] = relationship(
         back_populates="worker"
     )
 
-class JobSkills(Base):
+class JobSkills_table(Base):
     __tablename__="job_skills"
 
     job_id :Mapped[int] = mapped_column(
@@ -114,7 +134,7 @@ class JobSkills(Base):
         ForeignKey("skills.id"),
         primary_key=True
     )
-class Location(Base):
+class Location_table(Base):
     __tablename__="locations"
 
     id :Mapped[int]= mapped_column(
