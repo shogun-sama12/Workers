@@ -1,0 +1,15 @@
+fastapi
+pydantic
+alembic==1.18.3
+argon2-cffi==25.1.0
+argon2-cffi-bindings==25.1.0
+email-validator
+uvicorn==0.40.0
+SQLAlchemy==2.0.46
+asyncpg
+psycopg2
+authx
+dotenv
+sqlalchemy
+jose
+python-jose

@@ -8,9 +8,8 @@ class CreateWorker(BaseModel):
     work:str = Field(
         min_length=2
     )
-    experience:str = Field(
-        ge=0,
-        le=50
+    experience:int = Field(
+        ge=0
     )
     password:str = Field(
         min_length=8
@@ -22,14 +21,15 @@ class CreateCompany(BaseModel):
         min_length=2,
         max_length=100
     )
-    describtion:str= Field(
+    description:str= Field(
         min_length=3,
         max_length=1000
     )
     website:str = Field(
         max_length=200
     )
+    email:str = EmailStr
+
     password:str = Field(
         min_length=8
     )
-    

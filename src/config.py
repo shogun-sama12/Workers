@@ -20,7 +20,7 @@ class Settings(BaseSettings):
             password=self.DB_PASS,
             host=self.DB_HOST,
             port=self.DB_PORT,
-            database=self.DB_NAME,      
+            database=self.DB_NAME,
         )
     @property
     def DATABASE_URL_syncpg(self):
@@ -32,6 +32,7 @@ class Settings(BaseSettings):
             port=self.DB_PORT,
             database=self.DB_NAME,
         )
+    
     model_config = SettingsConfigDict(env_file=".env",extra ="ignore")
 
 settings = Settings()
