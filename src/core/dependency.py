@@ -73,18 +73,7 @@ def require_role(required_role:str):
 #     async def role_checker(current = Depends(get_current_user)):
 #         if current["role"] !=
 
-async def get_job(
-    job_id:int,
-    db:AsyncSession = Depends(get_db)
-):
-    stmt = select(Job).filter(Job.id == job_id)
-    result  = await db.execute(stmt)
-    job = result.scalar_one_or_none()
 
-    if not job:
-        raise HTTPException(status_code=404, detail="Job doesn't exist")
-    
-    return job
 
 async def get_application(
     application_id :int,

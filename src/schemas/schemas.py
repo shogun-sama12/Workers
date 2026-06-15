@@ -1,17 +1,16 @@
 from pydantic import BaseModel, Field, EmailStr
+from schemas.categorial_db_columns import WorkFormat, EmploymentType, ExperienceLevel
 class Job_schema(BaseModel):
     title:str = Field(
         max_length=40,
         min_length=3,
         description="job_title"
     )
-    experience:str = Field(
-        description="required job experience"
-    )
+    experience:ExperienceLevel
     salary_low:int
     salary_high:int
-    employment:str
-    work_format:str
+    employment:EmploymentType
+    work_format:WorkFormat
     location_id:int
     description:str
 
@@ -58,3 +57,9 @@ class Employee_schema(BaseModel):
     worker_id:int
 
     company_id:int
+
+class JobFilterSchema(BaseModel):
+    experience: ExperienceLevel | None = None
+    work_format: WorkFormat | None = None
+    employment_type: EmploymentType | None = None
+    city_id: int | None = None

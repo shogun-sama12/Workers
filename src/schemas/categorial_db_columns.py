@@ -1,16 +1,16 @@
 from enum import Enum
 
-class ExperienceLevel(Enum):
+class ExperienceLevel(str,Enum):
     junior = "junior"
     middle = "middle"
     senior = "senior"
 
-class EmploymentType(Enum):
-    full_time = "full-time"
-    part_time = "part-time"
+class EmploymentType(str,Enum):
+    full_time = "full_time"
+    part_time = "part_time"
     internship = "internship"
 
-class WorkFormat(Enum):
+class WorkFormat(str,Enum):
     remote = "remote"
     office = "office"
     hybrid = "hybrid"

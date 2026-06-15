@@ -1,14 +1,14 @@
 from fastapi import FastAPI, Depends, HTTPException, Response
 import uvicorn
-from core.dependency import get_db, get_current_user, require_role, get_job, get_application, verify_employee
+from core.dependency import get_db, get_current_user, require_role,  get_application, verify_employee
 from config import AsyncSession
 from core.security import authenticate_user, set_cookie
-from schemas.shemas import Company_schema, Worker_schema, Job_schema, Employee_schema
+from schemas.schemas import Company_schema, Worker_schema, Job_schema, Employee_schema, JobFilterSchema
 from schemas.registration import CreateCompany, CreateWorker
 from schemas.login import LoginCompany, LoginWorker
 from models.models import Worker, Company, Job, Application, Employee
 from core.security import password_hasher
-from api.get_data import get_jobs, get_applications, get_cities
+from api.get_data import get_jobs, get_applications, get_cities ,get_job, filter_jobs
 from api.post_update_data import check_application
 from sqlalchemy.exc import IntegrityError
 from fastapi.middleware.cors import CORSMiddleware
@@ -136,6 +136,22 @@ async def jobs(
     jobs = await get_jobs(db=db)
     return jobs
     
+@app.post("/jobs/filtered")
+async def get_filtered_jobs(
+    filter:JobFilterSchema,
+    db:AsyncSession = Depends(get_db)
+):
+    jobs = await filter_jobs(filter, db)
+    return jobs
+
+@app.get("/jobs/{job_id}")
+async def get_job_info(
+    job_id:int,
+    db:AsyncSession = Depends(get_db)
+):
+    job = await get_job(job_id = job_id,db= db)
+    return job
+
 @app.post("/jobs/{job_id}/application")
 async def apply_to_job(
     job_id:int,

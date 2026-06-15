@@ -3,6 +3,7 @@ from sqlalchemy.orm import selectinload
 from models.models import Job, Application, Location
 from core.dependency import get_db, AsyncSession
 from fastapi import Depends, HTTPException
+from schemas.schemas import JobFilterSchema
 
 
 async def get_jobs(db):
@@ -63,4 +64,57 @@ async def get_cities(db):
             "city_id":city.id,
             "city_name":city.city
         } for city in cites
+    ]
+
+async def get_job(job_id:int, db):
+    stmt = select(Job).where(Job.id == job_id).options(selectinload(Job.company), selectinload(Job.location))
+    result = await db.execute(stmt)
+    if not result:
+        raise HTTPException(status_code=404, detail="Job opening not found")
+    job = result.scalar_one_or_none()
+
+    return {
+            "job_title":job.title,
+            "experience":job.experience,
+            "work_format":job.work_format,
+            "employment":job.employment,
+            "salary_low":job.salary_low,
+            "salary_high":job.salary_high,
+            "salary_currency":job.currency,
+            "job_description":job.description,
+            "location":job.location.city,
+            "company_name":job.company.name,
+            "company_id":job.company_id
+        }
+
+async def filter_jobs(filter:JobFilterSchema,db):
+    query = select(Job).options(selectinload(Job.location), selectinload(Job.company))
+
+    if filter.employment_type:
+        query = query.where(Job.employment == filter.employment_type)
+
+    if filter.work_format:
+        query = query.where(Job.work_format == filter.work_format)
+
+    if filter.city_id:
+        query = query.where(Job.location_id == filter.city_id)
+    
+    result = await db.execute(query)
+    jobs = result.scalars().all()
+
+    return [
+        {
+            "job_id":job.id,
+            "job_title":job.title,
+            "experience":job.experience,
+            "work_format":job.work_format,
+            "employment":job.employment,
+            "salary_low":job.salary_low,
+            "salary_high":job.salary_high,
+            "salary_currency":job.currency,
+            "job_description":job.description,
+            "location":job.location.city,
+            "company_name":job.company.name,
+            "company_id":job.company_id
+        } for job in jobs
     ]
