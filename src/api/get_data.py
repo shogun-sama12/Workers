@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from models.models import Job, Application, Location
 from core.dependency import get_db, AsyncSession
@@ -6,30 +6,44 @@ from fastapi import Depends, HTTPException
 from schemas.schemas import JobFilterSchema
 
 
-async def get_jobs(db):
-    stmt = select(Job).options(selectinload(Job.company), selectinload(Job.location))
+async def get_jobs(
+    offset:int,
+    limit:int,
+    page:int,
+    db:AsyncSession
+):
+    stmt = select(Job).order_by(Job.id).offset(offset).limit(limit).options(selectinload(Job.company), selectinload(Job.location))
     result = await db.execute(stmt)
     jobs = result.scalars().all()
 
     if not jobs:
         return "No jobs yet"
     
-    return [
-        {
-            "job_id":job.id,
-            "title":job.title,
-            "experience":job.experience,
-            "status":job.status,
-            "company":job.company.name,
-            "currency":job.currency,
-            "employment":job.employment,
-            "work_format":job.work_format,
-            "salary_low":job.salary_low,
-            "salary_high":job.salary_high,
-            "location":job.location.city
-        } for job in jobs
-    ]
-
+    total_query = select(func.count()).select_from(Job)
+    total = await db.scalar(total_query)
+    
+    return {
+        "page": page,
+        "size": limit,
+        "total": total,
+        "pages": (total + limit - 1)//limit,
+        "data": [
+            {
+                "job_title":job.title,
+                "experience":job.experience,
+                "work_format":job.work_format,
+                "employment":job.employment,
+                "salary_low":job.salary_low,
+                "salary_high":job.salary_high,
+                "salary_currency":job.currency,
+                "job_description":job.description,
+                "location":job.location.city,
+                "company_name":job.company.name,
+                "company_id":job.company_id  
+            }
+            for job in jobs
+        ] 
+    }
 async def get_applications(
     worker_id:int,
     db:AsyncSession

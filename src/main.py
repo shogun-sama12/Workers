@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Response
+from fastapi import FastAPI, Depends, HTTPException, Response, Query
 import uvicorn
 from core.dependency import get_db, get_current_user, require_role,  get_application, verify_employee
 from config import AsyncSession
@@ -131,9 +131,12 @@ async def add_job(
 
 @app.get("/jobs")
 async def jobs(
+    page: int = Query(1, ge=1),
+    size: int = Query(10,ge=1,le=100),
     db:AsyncSession = Depends(get_db)
 ):
-    jobs = await get_jobs(db=db)
+    offset = (page-1)*size
+    jobs = await get_jobs(offset =offset,limit = size,page =page,db=db)
     return jobs
     
 @app.post("/jobs/filtered")
