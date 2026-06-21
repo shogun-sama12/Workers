@@ -113,6 +113,13 @@ async def filter_jobs(filter:JobFilterSchema,db):
     if filter.city_id:
         query = query.where(Job.location_id == filter.city_id)
     
+    if filter.salary_low:
+        query = query.where(Job.salary_low >= filter.salary_low)
+
+    if filter.salary_high:
+        query = query.where(Job.salary_high <= filter.salary_high)
+    
+    
     result = await db.execute(query)
     jobs = result.scalars().all()
 

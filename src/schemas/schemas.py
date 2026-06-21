@@ -63,3 +63,5 @@ class JobFilterSchema(BaseModel):
     work_format: WorkFormat | None = None
     employment_type: EmploymentType | None = None
     city_id: int | None = None
+    salary_low: int | None = None
+    salary_high: int | None = None
