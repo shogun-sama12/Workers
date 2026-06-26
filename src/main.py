@@ -9,7 +9,7 @@ from schemas.login import LoginCompany, LoginWorker
 from models.models import Worker, Company, Job, Application, Employee
 from core.security import password_hasher
 from api.get_data import get_jobs, get_applications, get_cities ,get_job, filter_jobs
-from api.post_update_data import check_application
+from api.post_update_data import check_application, update_job_opening
 from sqlalchemy.exc import IntegrityError
 from fastapi.middleware.cors import CORSMiddleware
 app =  FastAPI()
@@ -42,6 +42,7 @@ async def register_worker(
         work =worker.work,
         experience = worker.experience,
         email = worker.email,
+        role = "worker",
         hashed_password = password_hasher(worker.password)
     )
     db.add(new_worker)
@@ -58,6 +59,7 @@ async def register_company(
         name = company.name,
         description =company.description,
         website = company.website,
+        role = "company",
         email = company.email,
         hashed_password = password_hasher(company.password)
     )
@@ -124,7 +126,7 @@ async def add_job(
         description = job.description
     )
     db.add(new_job)
-    await db.commit()
+    await db.commit()   
     await db.refresh(new_job)
 
     return {new_job.id: new_job.title}
@@ -155,6 +157,17 @@ async def get_job_info(
     job = await get_job(job_id = job_id,db= db)
     return job
 
+@app.put("/jobs/{job_id}")
+async def update_job(
+    job_id:int,
+    changes:Job_schema,
+    db:AsyncSession = Depends(get_db),
+    company = Depends(require_role("company"))
+):
+    await update_job_opening(job_id = job_id, changes = changes, db=db, company= company)
+
+    return {"message":"updated"}
+
 @app.post("/jobs/{job_id}/application")
 async def apply_to_job(
     job_id:int,
@@ -174,6 +187,19 @@ async def apply_to_job(
         raise HTTPException(status_code=409, detail="Already applied")
 
     return {"message":"Applied successfully"}
+@app.get("/get_job_openings_of_company")
+async def get_job_openings_of_company(
+    page: int = Query(1, ge=1),
+    size: int = Query(10,ge=1,le=100),
+    db:AsyncSession = Depends(get_db),
+    company = Depends(require_role("company"))
+):
+    company_id = company.id
+    offset = (page-1)*size
+    jobs = await get_jobs(offset =offset,limit = size,page =page,db=db, company_id=company_id)
+    
+    return jobs
+
 
 @app.post("/applications/{application_id}")
 async def process_application(

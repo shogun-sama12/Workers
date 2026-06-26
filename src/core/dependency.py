@@ -25,7 +25,7 @@ async def get_token_payload(access_token:str = Cookie(None)):
             algorithms=[ALGORITHM]
         )
         # print(access_token)
-        print(payload)
+        # print(payload)
         return payload
     except JWTError:
          raise HTTPException(status_code=401, detail="Invalid token")
@@ -35,7 +35,7 @@ async def get_current_user(
         payload = Depends(get_token_payload)
     ):
     data = json.loads(payload.get("sub"))
-    print(data)
+    # print(data)
     user_id = data.get("id")
     role = data.get("role")
 

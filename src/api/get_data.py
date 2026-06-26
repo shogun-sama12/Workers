@@ -4,15 +4,20 @@ from models.models import Job, Application, Location
 from core.dependency import get_db, AsyncSession
 from fastapi import Depends, HTTPException
 from schemas.schemas import JobFilterSchema
-
+from typing import Optional
 
 async def get_jobs(
     offset:int,
     limit:int,
     page:int,
-    db:AsyncSession
+    db:AsyncSession,
+    company_id: Optional[int]= None
 ):
     stmt = select(Job).order_by(Job.id).offset(offset).limit(limit).options(selectinload(Job.company), selectinload(Job.location))
+
+    if company_id:
+        stmt = stmt.where(company_id == company_id)
+
     result = await db.execute(stmt)
     jobs = result.scalars().all()
 
@@ -29,8 +34,10 @@ async def get_jobs(
         "pages": (total + limit - 1)//limit,
         "data": [
             {
+                "job_id":job.id,
                 "job_title":job.title,
                 "experience":job.experience,
+                "company_name":job.company.name,
                 "work_format":job.work_format,
                 "employment":job.employment,
                 "salary_low":job.salary_low,
@@ -39,7 +46,8 @@ async def get_jobs(
                 "job_description":job.description,
                 "location":job.location.city,
                 "company_name":job.company.name,
-                "company_id":job.company_id  
+                "company_id":job.company_id,
+                "job_status":job.status
             }
             for job in jobs
         ] 
@@ -88,6 +96,7 @@ async def get_job(job_id:int, db):
     job = result.scalar_one_or_none()
 
     return {
+            "job_id":job.id,
             "job_title":job.title,
             "experience":job.experience,
             "work_format":job.work_format,
@@ -103,6 +112,9 @@ async def get_job(job_id:int, db):
 
 async def filter_jobs(filter:JobFilterSchema,db):
     query = select(Job).options(selectinload(Job.location), selectinload(Job.company))
+
+    if filter.experience:
+        query = query.where(Job.experience == filter.experience)
 
     if filter.employment_type:
         query = query.where(Job.employment == filter.employment_type)
