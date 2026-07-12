@@ -14,3 +14,7 @@ class WorkFormat(str,Enum):
     remote = "remote"
     office = "office"
     hybrid = "hybrid"
+
+class ApplicationDecision(str, Enum):
+    hire = "hire"
+    reject = "reject"

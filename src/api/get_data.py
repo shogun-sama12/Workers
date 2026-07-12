@@ -1,5 +1,5 @@
-from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload
+from sqlalchemy import select, func, join
+from sqlalchemy.orm import selectinload, joinedload
 from models.models import Job, Application, Location
 from core.dependency import get_db, AsyncSession
 from fastapi import Depends, HTTPException
@@ -77,6 +77,49 @@ async def get_applications(
         } for application in applications
     ]
 
+async def get_applications_company(
+    db,limit, offset, page, company
+):
+    company_id = company.id
+    stmt = select(Application).join(Job, Application.job_id == Job.id).where(Job.company_id == company_id).offset(offset).limit(limit).options(selectinload(Application.job), selectinload(Application.worker))
+    result = await db.execute(stmt)
+    applications = result.scalars().all()
+    if not applications:
+        raise HTTPException(status_code=404, detail="No applications")
+    total_query = select(func.count()).select_from(Application)
+    total = await db.scalar(total_query)
+
+    return [
+        {
+            "page":page,
+            "size":limit,
+            "total":total,
+            "pages": (total + limit - 1)//limit,
+            "application_id":app.id,
+            "application_title":app.job.title,
+            "applicant":app.worker.name
+        } for app in applications
+    ]
+
+async def get_application(
+    application_id:int,
+    db,
+    company
+):
+    company_id = company.id
+    stmt = select(Application).join(Job, Application.job_id == Job.id).where(Application.id == application_id).where(Job.company_id == company_id).options(selectinload(Application.worker), selectinload(Application.job))
+    result = await db.execute(stmt)
+    application = result.scalar_one_or_none()
+
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    return {
+        "application_title":application.job.title,
+        "applicant":application.worker.name,
+        "applicant_id":application.worker.id
+    }
+
+
 async def get_cities(db):
     stmt = select(Location)
     result = await db.execute(stmt)
@@ -151,3 +194,4 @@ async def filter_jobs(filter:JobFilterSchema,db):
             "company_id":job.company_id
         } for job in jobs
     ]
+

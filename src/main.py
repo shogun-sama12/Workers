@@ -8,9 +8,8 @@ from schemas.registration import CreateCompany, CreateWorker
 from schemas.login import LoginCompany, LoginWorker
 from models.models import Worker, Company, Job, Application, Employee
 from core.security import password_hasher
-from api.get_data import get_jobs, get_applications, get_cities ,get_job, filter_jobs
-from api.post_update_data import check_application, update_job_opening
-from sqlalchemy.exc import IntegrityError
+from api.get_data import get_jobs, get_applications, get_cities ,get_job, filter_jobs , get_applications_company, get_application
+from api.post_update_data import recruitment, update_job_opening, create_application
 from fastapi.middleware.cors import CORSMiddleware
 app =  FastAPI()
 
@@ -157,7 +156,7 @@ async def get_job_info(
     job = await get_job(job_id = job_id,db= db)
     return job
 
-@app.put("/jobs/{job_id}")
+@app.put("company/jobs/{job_id}")
 async def update_job(
     job_id:int,
     changes:Job_schema,
@@ -172,22 +171,12 @@ async def update_job(
 async def apply_to_job(
     job_id:int,
     db:AsyncSession = Depends(get_db),
-    worker = Depends(require_role("worker")),
-    job = Depends(get_job)
+    worker = Depends(require_role("worker"))
 ):
-    application = Application(
-        worker_id = worker.id,
-        job_id = job_id
-    )
-    db.add(application)
-    try:
-        await db.commit()
-        await db.refresh(application)
-    except IntegrityError:
-        raise HTTPException(status_code=409, detail="Already applied")
+    response = await create_application(job_id = job_id,db=db ,worker=worker)
+    return response
 
-    return {"message":"Applied successfully"}
-@app.get("/get_job_openings_of_company")
+@app.get("/company/jobs")
 async def get_job_openings_of_company(
     page: int = Query(1, ge=1),
     size: int = Query(10,ge=1,le=100),
@@ -201,35 +190,56 @@ async def get_job_openings_of_company(
     return jobs
 
 
-@app.post("/applications/{application_id}")
+@app.post("/company/application/{application_id}")
 async def process_application(
     application_id:int,
     decision:str,
     db:AsyncSession = Depends(get_db),
-    current_user = Depends(get_current_user)
+    company = Depends(require_role("company"))
 ):
-    application = await get_application(application_id, db)
-    print(f"Application role: {application.job.title}")
-    company_id = application.job.company_id
-    print(f"Company={company_id}")
+    response = await recruitment(
+        application_id=application_id,
+        decision=decision,
+        company=company,
+        db = db
+    )
+    return response
 
-    employee = await verify_employee("hr",company_id ,db, current_user=current_user)
-
-    print(f"Employee id: {employee.id}")
-    if employee and application:
-        await check_application(decision, application, db)
-    else:
-        raise HTTPException(status_code=404, detail="Appication not found")
-    
-    return {"message":"reqruiment is over"}
-
-@app.get("/applications")
+@app.get("/worker/applications")
 async def show_applications(
     db:AsyncSession = Depends(get_db),
     worker = Depends(require_role("worker"))
 ):
     applications= await get_applications(db= db, worker_id=worker.id)
     return applications
+
+@app.get("/company/applications")
+async def get_company_applications(
+    page: int = Query(1, ge=1),
+    size: int = Query(10,ge=1,le=100),
+    db:AsyncSession = Depends(get_db),
+    company = Depends(require_role("company"))
+):
+    company_id = company.id
+    offset = (page-1)*size
+    applications = await get_applications_company(
+        db=db,
+        page=page,
+        limit=size,
+        offset= offset,
+        company= company
+    )
+    return applications
+
+@app.get("/company/application/{application_id}")
+async def show_application(
+    application_id:int,
+    db:AsyncSession = Depends(get_db),
+    company = Depends(require_role("company"))
+):
+    application = await get_application(application_id=application_id, db=db, company=company)
+
+    return application
 
 # @app.post("/create_employee")
 # async def create_employee(
