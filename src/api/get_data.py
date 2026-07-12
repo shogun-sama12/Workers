@@ -81,7 +81,7 @@ async def get_applications_company(
     db,limit, offset, page, company
 ):
     company_id = company.id
-    stmt = select(Application).join(Job, Application.job_id == Job.id).where(Job.company_id == company_id).offset(offset).limit(limit).options(selectinload(Application.job), selectinload(Application.worker))
+    stmt = select(Application).join(Job, Application.job_id == Job.id).where(Job.company_id == company_id).where(Application.status == "pending").offset(offset).limit(limit).options(selectinload(Application.job), selectinload(Application.worker))
     result = await db.execute(stmt)
     applications = result.scalars().all()
     if not applications:
