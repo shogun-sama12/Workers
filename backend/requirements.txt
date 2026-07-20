@@ -7,7 +7,7 @@ email-validator
 uvicorn==0.40.0
 SQLAlchemy==2.0.46
 asyncpg
-psycopg2
+psycopg2-binary
 authx
 dotenv
 sqlalchemy

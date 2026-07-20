@@ -1,0 +1,36 @@
+body{font-family: Arial, sans-serif;margin:0;padding:0}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#222;color:#fff}
+.nav a{color:#fff;margin-right:12px;text-decoration:none}
+.brand a{font-weight:bold;color:#fff}
+.links{display:flex;align-items:center;gap:12px}
+.profile-link{margin-left:auto}
+.form-container{max-width:600px;margin:20px auto;padding:16px;border:1px solid #ddd;border-radius:6px}
+.form-container input, .form-container select{display:block;width:100%;padding:8px;margin:6px 0}
+.list{max-width:800px;margin:20px auto;padding:8px}
+.list ul{list-style:none;padding:0}
+.list li{padding:8px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+button{padding:8px 12px;margin-left:8px}
+.profile{margin-left:12px;margin-right:8px}
+
+.loading-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(255,255,255,0.85);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+
+.spinner{
+  width:48px;
+  height:48px;
+  border:6px solid rgba(0,0,0,0.15);
+  border-top-color:#222;
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
